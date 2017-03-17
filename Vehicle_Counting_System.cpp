@@ -4,8 +4,7 @@ using namespace std;
 using namespace cv;
 
 int CarNum = 0;
-Mat MoveDetect(Mat frame1, Mat frame2)
-{
+Mat MoveDetect(Mat frame1, Mat frame2){
 	Mat result = frame2.clone();
 	Mat gray1, gray2;
 	cvtColor(frame1, gray1, CV_BGR2GRAY);
@@ -35,20 +34,17 @@ Mat MoveDetect(Mat frame1, Mat frame2)
 	//drawContours(img2, contours, -1, Scalar(0, 0, 255), 1, 8);  //绘制轮廓
 	int x0=0, y0=0, w0=0, h0=0;
 	char Num[10];
-	for(int i=0; i<contours.size(); i++)
-	{
+	for(int i=0; i<contours.size(); i++){
 		approxPolyDP(Mat(contours[i]), contours_poly[i], 3, true); //多边形逼近
 		boundRect[i] = boundingRect((Mat)contours_poly[i]); //查找每个轮廓的外接矩形
-		if(boundRect[i].width > 55 && boundRect[i].width <180 && boundRect[i].height > 55 && boundRect[i].height < 180)
-		{
+		if(boundRect[i].width > 55 && boundRect[i].width <180 && boundRect[i].height > 55 && boundRect[i].height < 180){
 			x0 = boundRect[i].x;  //获得第i个外接矩形的左上角的x坐标
 			y0 = boundRect[i].y; //获得第i个外接矩形的左上角的y坐标
 			w0 = boundRect[i].width; //获得第i个外接矩形的宽度
 			h0 = boundRect[i].height; //获得第i个外接矩形的高度
 			rectangle(result, Point(x0, y0), Point(x0+w0, y0+h0), Scalar(0, 255, 0), 2, 8); //绘制第i个外接矩形		
 		}
-		if((y0 + h0/2 + 1) >= 138 && (y0 + h0/2 - 1) <= 142)
-		{
+		if((y0 + h0/2 + 1) >= 138 && (y0 + h0/2 - 1) <= 142){
 			CarNum++;
 		}
 		line(result, Point(0,140), Point(568,140), Scalar(0,0,255), 1, 8);
@@ -60,8 +56,7 @@ Mat MoveDetect(Mat frame1, Mat frame2)
 	return result;	
 }
 
-void main()
-{	 
+void main(){	 
 	VideoCapture cap("car.avi");
     if(!cap.isOpened()) //检查打开是否成功
          return;
@@ -69,11 +64,9 @@ void main()
 	Mat result; 
 	Mat temp;
 	int count=0;
-    while(1)
-    {
+    while(1){
         cap>>frame;
-        if(!frame.empty())
-        {
+        if(!frame.empty()){
 			count++;
 			if(count==1)
 				 result = MoveDetect(frame, frame);
