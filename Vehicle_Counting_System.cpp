@@ -3,26 +3,34 @@
 using namespace std;
 using namespace cv;
 
-Mat MoveDetect(Mat background, Mat img)
+Mat MoveDetect(Mat frame1, Mat frame2)
 {
-	Mat result = img.clone();
+	Mat result = frame2.clone();
 	Mat gray1, gray2;
-	cvtColor(background, gray1, CV_BGR2GRAY);
-	cvtColor(img, gray2, CV_BGR2GRAY);
+	cvtColor(frame1, gray1, CV_BGR2GRAY);
+	cvtColor(frame2, gray2, CV_BGR2GRAY);
 
 	Mat diff;
 	absdiff(gray1, gray2, diff);
 	//imshow("absdiss", diff);
-	threshold(diff, diff, 45, 255, CV_THRESH_BINARY);
+	//threshold(diff, diff, 45, 255, CV_THRESH_BINARY); //简单二值化
+	adaptiveThreshold(diff, diff, 255, ADAPTIVE_THRESH_GAUSSIAN_C, THRESH_BINARY_INV, 15, 3);
 	//imshow("threshold", diff);
  
-	Mat element = getStructuringElement(MORPH_RECT, Size(3, 3));
-	Mat element2 = getStructuringElement(MORPH_RECT, Size(15, 15));
+	/*Mat element = getStructuringElement(MORPH_RECT, Size(3, 3));
+	Mat element2 = getStructuringElement(MORPH_RECT, Size(21, 21));
 	erode(diff, diff, element);
-	//imshow("erode", diff);
- 
+	imshow("erode", diff);
+
 	dilate(diff, diff, element2);
-	//imshow("dilate", diff);
+	imshow("dilate", diff);*/
+
+	Mat element = getStructuringElement(MORPH_RECT, Size(3, 3));
+	Mat element2 = getStructuringElement(MORPH_RECT, Size(21, 21));
+	//进行形态学操作
+	morphologyEx(diff, diff, MORPH_OPEN, element);
+	medianBlur(diff, diff, 9);
+	dilate(diff, diff, element2);
 
 	vector<vector<Point>> contours;  
 	vector<Vec4i> hierarcy;
@@ -40,17 +48,17 @@ Mat MoveDetect(Mat background, Mat img)
 		h0 = boundRect[i].height; //获得第i个外接矩形的高度
 		rectangle(result, Point(x0, y0), Point(x0+w0, y0+h0), Scalar(0, 255, 0), 2, 8); //绘制第i个外接矩形
 	}
-	return result;
+	return result;	
 }
 
 void main()
 {	 
-    VideoCapture cap("bike.avi");
+	VideoCapture cap("car.avi");
     if(!cap.isOpened()) //检查打开是否成功
          return;
     Mat frame;
-	Mat background;
-	Mat result;
+	Mat result; 
+	Mat temp;
 	int count=0;
     while(1)
     {
@@ -59,18 +67,18 @@ void main()
         {
 			count++;
 			if(count==1)
-				background = frame.clone(); //提取第一帧为背景帧
-            imshow("video", frame);
-			result = MoveDetect(background, frame);
+				 result = MoveDetect(frame, frame);
+			else
+				 result = MoveDetect(temp, frame);
+			imshow("video", frame);
 			imshow("result", result);
-            if(waitKey(50)==27)
+			temp = frame.clone();
+            if(waitKey(5)==27)
                break;
         }
         else
             break;
     }
     cap.release();  
-
-
-	
+	waitKey(0);
 }
